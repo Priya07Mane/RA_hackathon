@@ -1,13 +1,9 @@
 import mysql.connector
 import ollama
+import json
 
-# MySQL credentials
-DB_CONFIG = {
-    'host': 'localhost',
-    'user': 'root',               # 🔁 your username
-    'password': '', # 🔁 your password
-    'database': 'ra'        # 🔁 your DB name
-}
+with open('config.json') as f:
+    db_config = json.load(f)
 
 # Schema description (for LLM context)
 SCHEMA = """
@@ -30,7 +26,7 @@ min_single_purchase_value | double |NOT NULL
 
 Table:customer_info
 Columns :
-customer_id        | int  |PRIMARY KEY |NOT NULL
+customer_id        | int  |NOT NULL |PRIMARY KEY
 age                | int  |NOT NULL
 gender             | text |NOT NULL //can be "Female","Male" or "Other"
 income_bracket     | text |NOT NULL // can be "Low", "Medium" or "High"
@@ -42,6 +38,59 @@ loyalty_program    | text |NOT NULL //can be "Yes" or "No"
 membership_years   | int  |NOT NULL
 churned            | text |NOT NULL // can be "Yes" or "No"
 
+Table:product_info
+Columns:
+customer_id              | int    |NOT NULL  |PRIMARY KEY
+product_id               | int    |NOT NULL
+product_name             | text   |NOT NULL   //can be "Product A", "Product B", "Product C" or "Product D"
+product_category         | text   |NOT NULL   //can be "Furniture","Toys","Groceries","Electronics"or "Clothing"
+product_brand            | text   |NOT NULL
+product_rating           | double |NOT NULL   //can be between 1 and 5
+product_review_count     | int    |NOT NULL
+product_stock            | int    |NOT NULL
+product_return_rate      | double |NOT NULL
+product_size             | text   |NOT NULL   //can be "Small", "Medium" or "Large"
+product_weight           | double |NOT NULL
+product_color            | text   |NOT NULL   //can be "Red", "Blue", "Green", "Black" or "White"
+product_material         | text   |NOT NULL   //can be "Wood", "Plastic", "Metal" or "Glass"
+product_manufacture_date | text   |NOT NULL   
+product_expiry_date      | text   |NOT NULL
+product_shelf_life       | int    |NOT NULL   //in days
+
+Table:promotional_data
+Columns:
+customer_id               | int    |NOT NULL |PRIMARY KEY
+promotion_id              | int    |NOT NULL   
+promotion_type            | text   |NOT NULL  //can be "Buy One Get One Free","20% Off"or 'Flash Sale'
+promotion_start_date      | text   |NOT NULL 
+promotion_end_date        | text   |NOT NULL 
+promotion_effectiveness   | text   |NOT NULL //can be "High","Low" or "Medium"
+promotion_channel         | text   |NOT NULL //can be "In-store","Social Media" or "Online"
+promotion_target_audience | text   |NOT NULL //can be "Returning Customers" or "New Customers"
+avg_discount_used         | double |NOT NULL //can range from 0 to 1
+
+Table: sales_data
+Columns:
+customer_id	             |int    |NOT NULL |PRIMARY KEY
+total_sales	             |double |NOT NULL
+total_discounts_received |double |NOT NULL
+total_returned_items	 |int    |NOT NULL 
+total_returned_value	 |double |NOT NULL
+
+Table: transaction_data
+Columns:
+transaction_id	         |int    |NOT NULL |PRIMARY KEY
+customer_id	             |int    |NOT NULL
+product_id	             |int    |NOT NULL
+promotion_id	         |int    |NOT NULL
+transaction_date	     |text   |NOT NULL
+transaction_hour	     |int    |NOT NULL
+payment_method	         |text   |NOT NULL  //can be "Cash" ,"Credit Card","Mobile Payment" or "Debit Card"
+quantity	             |int    |NOT NULL 
+unit_price	             |double |NOT NULL
+discount_applied	     |double |NOT NULL
+preferred_store	         |text   |NOT NULL  // can be "Location A","Location B","Location C" or "Location D"
+store_location	         |text   |NOT NULL  // can be "Location A","Location B","Location C" or "Location D"
 """
 
 # Convert natural language to SQL using Mistral (Ollama)
@@ -77,7 +126,7 @@ SQL:"""
 # Run SQL on MySQL and print raw output
 def run_sql_query(sql):
     try:
-        conn = mysql.connector.connect(**DB_CONFIG)
+        conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
         cursor.execute(sql)
 
