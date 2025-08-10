@@ -1,0 +1,4 @@
+flask
+mysql-connector-python
+ollama
+python-dotenv
