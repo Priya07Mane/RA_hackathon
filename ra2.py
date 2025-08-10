@@ -102,6 +102,7 @@ Follow these conditions:
 **NO additional statements should be present.**
 **Go through the schema carefully before generating the SQL query.**
 **When only one attribute is asked to return ,it should be returned along with the PRIMARY KEY of that Table**
+**When the question refers to "total number" or "count" or synonyms of that,only the number should be returned.**
 **When the question refers to "data" all attributes of the table must be printed.**
 **The values in attributes should be returned in the same order as they are present in the schema.**
 **Answers should be within the scope of the schema provided.**
@@ -148,15 +149,20 @@ def run_sql_query(sql):
     except Exception as e:
         print(f"\n❌ SQL Execution Error: {e}")
 
-# Main program loop
-if __name__ == "__main__":
-    print("🔍 Natural Language to SQL (Ollama + MySQL)")
-    question = input("Enter your question: ")
+# ra2.py
 
-    print("\n🧠 Generating SQL query...")
+# ... all your existing code ...
+
+def sql_pipeline(question):
     sql = get_sql_from_question(question)
-    print("\n💡 Generated SQL:")
-    print(sql)
-
-    print("\n📊 Running query on MySQL...")
-    run_sql_query(sql)
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        cursor.execute(sql)
+        rows = cursor.fetchall()
+        column_names = [desc[0] for desc in cursor.description]
+        cursor.close()
+        conn.close()
+        return {'sql': sql, 'columns': column_names, 'rows': rows}
+    except Exception as e:
+        return {'sql': sql, 'error': str(e)}
