@@ -1,4 +1,5 @@
-*b*AI-Powered: Manufacturing Data Insights & Dynamic Reports via Natural Language*b*
+AI-Powered: Manufacturing Data Insights & Dynamic Reports via Natural Language
+
 This project was developed as a part of RA_hackathon,by Team Code Crusaders.It enables users to ask database questions in natural language and automatically converts their queries into SQL using an LLM (powered by Ollama and Llama 3). The generated SQL is executed on a MySQL database, and the results are displayed in a user-friendly web interface built with Flask.
 
 Key Features
