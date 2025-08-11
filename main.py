@@ -7,97 +7,90 @@ with open('config.json') as f:
 
 # Schema description (for LLM context)
 SCHEMA = """
-Table: customer_behavior_metrics
+Table:customer_behavior_metrics
 Columns:
-- avg_items_per_transaction (DOUBLE)
-- avg_purchase_value (DOUBLE)
-- avg_spent_per_category (DOUBLE)
-- avg_transaction_value (DOUBLE)
-- customer_id (INT)
-- days_since_last_purchase (INT)
-- in_store_purchases (INT)
-- last_purchase_date (TEXT)
-- max_single_purchase_value (DOUBLE)
-- min_single_purchase_value (DOUBLE)
-- online_purchases (INT)
-- purchase_frequency (TEXT)
-- total_items_purchased (INT)
-- total_transactions (INT)
+customer_id               | int    |NOT NULL | PRIMARY KEY  
+online_purchases          | int    |NOT NULL
+in_store_purchases        | int    |NOT NULL 
+avg_items_per_transaction | double |NOT NULL
+avg_transaction_value     | double |NOT NULL
+purchase_frequency        | text   |NOT NULL //can be "Daily", "Weekly", "Monthly" or "Yearly"
+avg_purchase_value        | double |NOT NULL
+last_purchase_date        | date   |NOT NULL
+days_since_last_purchase  | int    |NOT NULL
+total_items_purchased     | int    |NOT NULL
+total_transactions        | int    |NOT NULL
+avg_spent_per_category    | double |NOT NULL
+max_single_purchase_value | double |NOT NULL
+min_single_purchase_value | double |NOT NULL
 
-Table: customer_info
-Columns:
-- age (INT)
-- churned (TEXT)
-- customer_id (INT)
-- education_level (TEXT)
-- gender (TEXT)
-- income_bracket (TEXT)
-- loyalty_program (TEXT)
-- marital_status (TEXT)
-- membership_years (INT)
-- number_of_children (INT)
-- occupation (TEXT)
+Table:customer_info
+Columns :
+customer_id        | int  |NOT NULL |PRIMARY KEY
+age                | int  |NOT NULL
+gender             | text |NOT NULL //can be "Female","Male" or "Other"
+income_bracket     | text |NOT NULL // can be "Low", "Medium" or "High"
+marital_status     | text |NOT NULL //can be "Single", "Married"or "Divorced"
+number_of_children | int  |NOT NULL 
+education_level    | text |NOT NULL //can be "High School", "Bachelor's", "Master's" or "PhD"
+occupation         | text |NOT NULL // can be "Self-Employed", "Employed", "Unemployed" or "Retired"
+loyalty_program    | text |NOT NULL //can be "Yes" or "No"
+membership_years   | int  |NOT NULL
+churned            | text |NOT NULL // can be "Yes" or "No"
 
-Table: customer_interaction_data
+Table:product_info
 Columns:
-- app_usage (TEXT)
-- customer_id (INT)
-- customer_support_calls (INT)
-- email_subscriptions (TEXT)
-- social_media_engagement (TEXT)
-- website_visits (INT)
+customer_id              | int    |NOT NULL  |PRIMARY KEY
+product_id               | int    |NOT NULL
+product_name             | text   |NOT NULL   //can be "Product A", "Product B", "Product C" or "Product D"
+product_category         | text   |NOT NULL   //can be "Furniture","Toys","Groceries","Electronics"or "Clothing"
+product_brand            | text   |NOT NULL
+product_rating           | double |NOT NULL   //can be between 1 and 5
+product_review_count     | int    |NOT NULL
+product_stock            | int    |NOT NULL
+product_return_rate      | double |NOT NULL
+product_size             | text   |NOT NULL   //can be "Small", "Medium" or "Large"
+product_weight           | double |NOT NULL
+product_color            | text   |NOT NULL   //can be "Red", "Blue", "Green", "Black" or "White"
+product_material         | text   |NOT NULL   //can be "Wood", "Plastic", "Metal" or "Glass"
+product_manufacture_date | text   |NOT NULL   
+product_expiry_date      | text   |NOT NULL
+product_shelf_life       | int    |NOT NULL   //in days
 
-Table: product_info
+Table:promotional_data
 Columns:
-- product_brand (TEXT)
-- product_category (TEXT)
-- product_color (TEXT)
-- product_expiry_date (TEXT)
-- product_id (INT)
-- product_manufacture_date (TEXT)
-- product_material (TEXT)
-- product_name (TEXT)
-- product_rating (DOUBLE)
-- product_return_rate (DOUBLE)
-- product_review_count (INT)
-- product_shelf_life (INT)
-- product_size (TEXT)
-- product_stock (INT)
-- product_weight (DOUBLE)
-
-Table: promotional_data
-Columns:
-- avg_discount_used (DOUBLE)
-- promotion_channel (TEXT)
-- promotion_effectiveness (TEXT)
-- promotion_end_date (TEXT)
-- promotion_id (INT)
-- promotion_start_date (TEXT)
-- promotion_target_audience (TEXT)
-- promotion_type (TEXT)
+customer_id               | int    |NOT NULL |PRIMARY KEY
+promotion_id              | int    |NOT NULL   
+promotion_type            | text   |NOT NULL  //can be "Buy One Get One Free","20% Off"or 'Flash Sale'
+promotion_start_date      | text   |NOT NULL 
+promotion_end_date        | text   |NOT NULL 
+promotion_effectiveness   | text   |NOT NULL //can be "High","Low" or "Medium"
+promotion_channel         | text   |NOT NULL //can be "In-store","Social Media" or "Online"
+promotion_target_audience | text   |NOT NULL //can be "Returning Customers" or "New Customers"
+avg_discount_used         | double |NOT NULL //can range from 0 to 1
 
 Table: sales_data
 Columns:
-- customer_id (INT)
-- total_discounts_received (DOUBLE)
-- total_returned_items (INT)
-- total_returned_value (DOUBLE)
-- total_sales (DOUBLE)
+customer_id	             |int    |NOT NULL |PRIMARY KEY
+total_sales	             |double |NOT NULL
+total_discounts_received |double |NOT NULL
+total_returned_items	 |int    |NOT NULL 
+total_returned_value	 |double |NOT NULL
 
 Table: transaction_data
 Columns:
-- customer_id (INT)
-- discount_applied (DOUBLE)
-- payment_method (TEXT)
-- preferred_store (TEXT)
-- product_id (INT)
-- promotion_id (INT)
-- quantity (INT)
-- store_location (TEXT)
-- transaction_date (TEXT)
-- transaction_hour (INT)
-- transaction_id (INT)
-- unit_price (DOUBLE)
+transaction_id	         |int    |NOT NULL |PRIMARY KEY
+customer_id	             |int    |NOT NULL
+product_id	             |int    |NOT NULL
+promotion_id	         |int    |NOT NULL
+transaction_date	     |text   |NOT NULL
+transaction_hour	     |int    |NOT NULL
+payment_method	         |text   |NOT NULL  //can be "Cash" ,"Credit Card","Mobile Payment" or "Debit Card"
+quantity	             |int    |NOT NULL 
+unit_price	             |double |NOT NULL
+discount_applied	     |double |NOT NULL
+preferred_store	         |text   |NOT NULL  // can be "Location A","Location B","Location C" or "Location D"
+store_location	         |text   |NOT NULL  // can be "Location A","Location B","Location C" or "Location D"
 """
 
 # Convert natural language to SQL using Mistral (Ollama)
@@ -105,15 +98,16 @@ def get_sql_from_question(question):
     prompt = f"""
 You are a helpful assistant that converts natural language questions into SQL queries.
 Follow these conditions:
-**Response should strictly ONLY contain the SQL query.**
-**NO additional statements should be present.**
-**Go through the schema carefully before generating the SQL query.**
-**When only one attribute is asked to return ,it should be returned along with the PRIMARY KEY of that Table**
-**When the question refers to "data" all attributes of the table must be printed.**
-**The values in attributes should be returned in the same order as they are present in the schema.**
-**Answers should be within the scope of the schema provided.**
-**If the question is not answerable with the given schema, respond with "No answer".**
-**Go through the schema carefully before generating the SQL query.**
+*1. Response should strictly ONLY contain the SQL query.*
+*2. NO additional text, explanations, or comments.*
+*3. Always read the schema carefully before generating SQL.*
+*4. When a question refers to 'total products sold' or 'products sold', ALWAYS count all rows (COUNT(column)), not DISTINCT, unless the question explicitly says 'unique', 'distinct', or 'different'.*
+*5. When the count is asked, return it along with the category on which it is grouped by.*
+*6. When only one attribute is asked to return, it should be returned along with the PRIMARY KEY of that table.*
+*7. When the question refers to 'total number', 'count', or synonyms, only return the number with no extra columns unless grouping is required.*
+*8. When the question refers to 'data', return all attributes of the table in the same order as in the schema.*
+*9. Only generate queries within the scope of the schema provided.*
+*10. If the question cannot be answered from the schema, respond with "No answer".*
 
 
 Use this schema:
@@ -155,15 +149,20 @@ def run_sql_query(sql):
     except Exception as e:
         print(f"\n❌ SQL Execution Error: {e}")
 
-# Main program loop
-if __name__ == "__main__":
-    print("🔍 Natural Language to SQL (Ollama + MySQL)")
-    question = input("Enter your question: ")
+# ra2.py
 
-    print("\n🧠 Generating SQL query...")
+# ... all your existing code ...
+
+def sql_pipeline(question):
     sql = get_sql_from_question(question)
-    print("\n💡 Generated SQL:")
-    print(sql)
-
-    print("\n📊 Running query on MySQL...")
-    run_sql_query(sql)
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        cursor.execute(sql)
+        rows = cursor.fetchall()
+        column_names = [desc[0] for desc in cursor.description]
+        cursor.close()
+        conn.close()
+        return {'sql': sql, 'columns': column_names, 'rows': rows}
+    except Exception as e:
+        return {'sql': sql, 'error': str(e)}
