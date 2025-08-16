@@ -96,20 +96,28 @@ store_location	         |text   |NOT NULL  // can be "Location A","Location B","
 # Convert natural language to SQL using Mistral (Ollama)
 def get_sql_from_question(question):
     prompt = f"""
-You are a helpful assistant that converts natural language questions into SQL queries.
+You are a highly skilled SQL expert that converts natural language questions into precise SQL queries.
 Follow these conditions:
-**Response should strictly ONLY contain the SQL query.**
-**NO additional statements should be present.**
-**Go through the schema carefully before generating the SQL query.**
-**When only one attribute is asked to return ,it should be returned along with the PRIMARY KEY of that Table**
-**When the question refers to "total number" or "count" or synonyms of that,only the number should be returned.**
-**When the question refers to "data" all attributes of the table must be printed.**
-**The values in attributes should be returned in the same order as they are present in the schema.**
-**Answers should be within the scope of the schema provided.**
-**If the question is not answerable with the given schema, respond with "No answer".**
-**Go through the schema carefully before generating the SQL query.**
-
-
+1. Response must contain ONLY the SQL query, no additional text or markdown syntax.
+2. Go through the schema carefully before generating the SQL query.
+3. For calculations (like percentages, rates, etc.), ensure proper mathematical operations are included.
+4. When joining tables, use proper join conditions based on primary/foreign keys.
+5. For time-based calculations (monthly, yearly), use appropriate date functions.
+6. For performance metrics, return them in the correct format (e.g., percentages as decimals 0-1 or with % sign).
+7. When multiple tables are involved, use table aliases for clarity.
+8. For aggregate functions, include proper GROUP BY clauses.
+9. When only one attribute is asked to return ,it should be returned along with the PRIMARY KEY of that Table.
+10. When the question refers to "total number" or "count" or synonyms of that,only the number should be returned.
+11. When the question refers to "data" all attributes of the table must be printed.
+12. The values in attributes should be returned in the same order as they are present in the schema.
+13. Answers should be within the scope of the schema provided.
+14. If the question is not answerable with the given schema, respond with "No answer".
+15. For calculations involving promotions, use the transaction_data table as the base.
+16. When joining promotional_data, join on promotion_id.
+17. For date ranges, use BETWEEN with promotion_start_date and promotion_end_date.
+18. For effectiveness calculations, compare actual sales value (unit_price * quantity) with discounted value.
+19. Format percentages using ROUND() and multiply by 100.
+20. Always verify column names exist in the schema before using them.
 
 Use this schema:
 
@@ -150,20 +158,48 @@ def run_sql_query(sql):
     except Exception as e:
         print(f"\n❌ SQL Execution Error: {e}")
 
-# ra2.py
-
-# ... all your existing code ...
 
 def sql_pipeline(question):
     sql = get_sql_from_question(question)
+    if sql.lower().strip() == "no answer":
+        return {'error': 'The question cannot be answered with the current database schema'}
     try:
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
         cursor.execute(sql)
+        # For single-value results (like percentages), format them nicely
         rows = cursor.fetchall()
         column_names = [desc[0] for desc in cursor.description]
+        # Format percentage results
+        formatted_rows = []
+        for row in rows:
+            formatted_row = []
+            for i, val in enumerate(row):
+                if 'percentage' in column_names[i].lower() or 'rate' in column_names[i].lower():
+                    formatted_row.append(f"{float(val)*100:.2f}%")
+                else:
+                    formatted_row.append(val)
+            formatted_rows.append(formatted_row)
         cursor.close()
         conn.close()
-        return {'sql': sql, 'columns': column_names, 'rows': rows}
+        return {
+            'sql': sql,
+            'columns': column_names,
+            'rows': formatted_rows if formatted_rows else rows
+        }
     except Exception as e:
-        return {'sql': sql, 'error': str(e)}
+        return {'sql': sql, 'error': f"SQL Execution Error: {str(e)}"}
+    
+# def sql_pipeline(question):
+#     sql = get_sql_from_question(question)
+#     try:
+#         conn = mysql.connector.connect(**db_config)
+#         cursor = conn.cursor()
+#         cursor.execute(sql)
+#         rows = cursor.fetchall()
+#         column_names = [desc[0] for desc in cursor.description]
+#         cursor.close()
+#         conn.close()
+#         return {'sql': sql, 'columns': column_names, 'rows': rows}
+#     except Exception as e:
+#         return {'sql': sql, 'error': str(e)}
