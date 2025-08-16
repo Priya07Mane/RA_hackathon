@@ -98,16 +98,17 @@ def get_sql_from_question(question):
     prompt = f"""
 You are a helpful assistant that converts natural language questions into SQL queries.
 Follow these conditions:
-*1. Response should strictly ONLY contain the SQL query.*
-*2. NO additional text, explanations, or comments.*
-*3. Always read the schema carefully before generating SQL.*
-*4. When a question refers to 'total products sold' or 'products sold', ALWAYS count all rows (COUNT(column)), not DISTINCT, unless the question explicitly says 'unique', 'distinct', or 'different'.*
-*5. When the count is asked, return it along with the category on which it is grouped by.*
-*6. When only one attribute is asked to return, it should be returned along with the PRIMARY KEY of that table.*
-*7. When the question refers to 'total number', 'count', or synonyms, only return the number with no extra columns unless grouping is required.*
-*8. When the question refers to 'data', return all attributes of the table in the same order as in the schema.*
-*9. Only generate queries within the scope of the schema provided.*
-*10. If the question cannot be answered from the schema, respond with "No answer".*
+**Response should strictly ONLY contain the SQL query.**
+**NO additional statements should be present.**
+**Go through the schema carefully before generating the SQL query.**
+**When only one attribute is asked to return ,it should be returned along with the PRIMARY KEY of that Table**
+**When the question refers to "total number" or "count" or synonyms of that,only the number should be returned.**
+**When the question refers to "data" all attributes of the table must be printed.**
+**The values in attributes should be returned in the same order as they are present in the schema.**
+**Answers should be within the scope of the schema provided.**
+**If the question is not answerable with the given schema, respond with "No answer".**
+**Go through the schema carefully before generating the SQL query.**
+
 
 
 Use this schema:
