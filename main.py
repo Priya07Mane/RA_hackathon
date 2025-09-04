@@ -158,7 +158,6 @@ def run_sql_query(sql):
     except Exception as e:
         print(f"\n❌ SQL Execution Error: {e}")
 
-
 def sql_pipeline(question):
     sql = get_sql_from_question(question)
     if sql.lower().strip() == "no answer":
@@ -167,9 +166,9 @@ def sql_pipeline(question):
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
         cursor.execute(sql)
-        # For single-value results (like percentages), format them nicely
         rows = cursor.fetchall()
         column_names = [desc[0] for desc in cursor.description]
+        
         # Format percentage results
         formatted_rows = []
         for row in rows:
@@ -180,16 +179,93 @@ def sql_pipeline(question):
                 else:
                     formatted_row.append(val)
             formatted_rows.append(formatted_row)
+        
         cursor.close()
         conn.close()
+        
+        # Check if data is suitable for charts (has numeric columns and limited rows)
+        chart_data = None
+        if len(rows) <= 20 and len(rows) > 0:
+            # Identify numeric columns
+            numeric_columns = []
+            for i, col in enumerate(column_names):
+                if rows and isinstance(rows[0][i], (int, float)):
+                    numeric_columns.append(i)
+            
+            # If we have at least one text column and one numeric column, prepare chart data
+            if numeric_columns and len(rows) > 1:
+                chart_data = {
+                    'labels': [str(row[0]) for row in rows],  # Use first column as labels
+                    'datasets': []
+                }
+                
+                # Add numeric columns as datasets
+                for col_idx in numeric_columns:
+                    if col_idx != 0:  # Skip the first column (used as labels)
+                        chart_data['datasets'].append({
+                            'label': column_names[col_idx],
+                            'data': [row[col_idx] for row in rows],
+                            'backgroundColor': get_chart_colors(len(rows))
+                        })
+        
         return {
             'sql': sql,
             'columns': column_names,
-            'rows': formatted_rows if formatted_rows else rows
+            'rows': formatted_rows if formatted_rows else rows,
+            'chart_data': chart_data
         }
     except Exception as e:
         return {'sql': sql, 'error': f"SQL Execution Error: {str(e)}"}
+
+# Helper function to generate chart colors
+def get_chart_colors(count):
+    color_palette = [
+        'rgba(54, 162, 235, 0.8)',  # Blue
+        'rgba(255, 99, 132, 0.8)',  # Red
+        'rgba(75, 192, 192, 0.8)',  # Green
+        'rgba(255, 159, 64, 0.8)',  # Orange
+        'rgba(153, 102, 255, 0.8)', # Purple
+        'rgba(255, 205, 86, 0.8)',  # Yellow
+        'rgba(201, 203, 207, 0.8)', # Gray
+        'rgba(0, 128, 128, 0.8)',   # Teal
+        'rgba(220, 20, 60, 0.8)',   # Crimson
+        'rgba(0, 100, 0, 0.8)'      # Dark Green
+    ]
+    return color_palette[:count]
+
+# -------version before charts-----
+# def sql_pipeline(question):
+#     sql = get_sql_from_question(question)
+#     if sql.lower().strip() == "no answer":
+#         return {'error': 'The question cannot be answered with the current database schema'}
+#     try:
+#         conn = mysql.connector.connect(**db_config)
+#         cursor = conn.cursor()
+#         cursor.execute(sql)
+#         # For single-value results (like percentages), format them nicely
+#         rows = cursor.fetchall()
+#         column_names = [desc[0] for desc in cursor.description]
+#         # Format percentage results
+#         formatted_rows = []
+#         for row in rows:
+#             formatted_row = []
+#             for i, val in enumerate(row):
+#                 if 'percentage' in column_names[i].lower() or 'rate' in column_names[i].lower():
+#                     formatted_row.append(f"{float(val)*100:.2f}%")
+#                 else:
+#                     formatted_row.append(val)
+#             formatted_rows.append(formatted_row)
+#         cursor.close()
+#         conn.close()
+#         return {
+#             'sql': sql,
+#             'columns': column_names,
+#             'rows': formatted_rows if formatted_rows else rows
+#         }
+#     except Exception as e:
+#         return {'sql': sql, 'error': f"SQL Execution Error: {str(e)}"}
     
+#-------old version-----    
 # def sql_pipeline(question):
 #     sql = get_sql_from_question(question)
 #     try:

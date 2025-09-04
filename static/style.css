@@ -64,6 +64,28 @@ pre {
 }
 
 
+/* Chart styles */
+#dataChart {
+    width: 100% !important;
+    height: 400px !important;
+}
+
+.chart-type-btn.active {
+    background-color: #0d6efd;
+    color: white;
+}
+
+/* Responsive chart adjustments */
+@media (max-width: 768px) {
+    #dataChart {
+        height: 300px !important;
+    }
+    
+    .chart-type-btn {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+    }
+}
 
 
 .badge.bg-dark {

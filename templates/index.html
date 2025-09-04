@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -7,6 +7,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 </head>
 <body>
     <div class="container py-5">
@@ -96,6 +98,39 @@
         </div>
     </div>
 
+     
+    {% if result and not result.get('error') and result.get('rows') %}
+    <div class="mt-5">
+        <h4 class="mb-3"><i class="fas fa-chart-bar me-2"></i>Visualizations</h4>
+        
+        <div class="row">
+            // Chart selection buttons 
+            <div class="col-md-12 mb-3">
+                <div class="btn-group" role="group" aria-label="Chart type selection">
+                    <button type="button" class="btn btn-outline-primary chart-type-btn active" data-type="bar">
+                        <i class="fas fa-chart-bar"></i> Bar Chart
+                    </button>
+                    <button type="button" class="btn btn-outline-primary chart-type-btn" data-type="line">
+                        <i class="fas fa-chart-line"></i> Line Chart
+                    </button>
+                    <button type="button" class="btn btn-outline-primary chart-type-btn" data-type="pie">
+                        <i class="fas fa-chart-pie"></i> Pie Chart
+                    </button>
+                </div>
+            </div>
+            
+            // Chart container 
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <canvas id="dataChart" height="400"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Copy to clipboard functionality
@@ -151,6 +186,281 @@
                 alert("Sorry, voice recognition not supported in this browser.");
             }
         }
+    </script>
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NLP-to-SQL Converter</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container py-5">
+        <div class="card shadow-lg">
+            <div class="card-header bg-primary text-white">
+                <h2 class="mb-0"><i class="fas fa-database me-2"></i>AI-Powered: Manufacturing Data Insights & Dynamic Reports via Natural Language</h2>
+                <small class="text-white-50">Powered by Ollama + MySQL</small>
+            </div>
+            
+            <div class="card-body">
+                <form method="post" class="mb-4">
+                    <div class="input-group">
+                        <input type="text" name="question" id="question-input"
+                               value="{{ question }}"
+                               class="form-control form-control-lg"
+                               placeholder="Ask your database question (e.g., 'Show me customers with high income')"
+                               required>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-search me-1"></i> Query
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-lg" id="voice-btn" title="Voice input">
+                            <i class="fas fa-microphone"></i>
+                        </button>
+                    </div>
+                    <div class="mt-2 text-muted small">
+                        Try: "Count customers by gender" or "List products with low stock"
+                        <span id="voice-status" class="ms-2 text-primary d-none">Listening...</span>
+                    </div>
+                </form>
+
+                {% if result %}
+                <div class="mt-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="mb-0"><i class="fas fa-code me-2"></i>Generated SQL</h4>
+                        <button class="btn btn-sm btn-outline-secondary copy-btn" data-target="#sql-code">
+                            <i class="far fa-copy me-1"></i>Copy
+                        </button>
+                    </div>
+                    <div class="card bg-light p-3 mb-4">
+                        <pre id="sql-code" class="mb-0">{{ result['sql'] }}</pre>
+                    </div>
+
+                    {% if result.get('error') %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <strong>Error:</strong> {{ result['error'] }}
+                    </div>
+                    {% elif result.get('rows') %}
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="mb-0"><i class="fas fa-table me-2"></i>Query Results</h4>
+                        <small class="text-muted">{{ result['rows']|length }} rows returned</small>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                {% for col in result['columns'] %}<th>{{ col }}</th>{% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in result['rows'] %}
+                                <tr>
+                                    {% for col in row %}<td>{{ col }}</td>{% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    {% if result.get('chart_data') %}
+                    <div class="mt-5">
+                        <h4 class="mb-3"><i class="fas fa-chart-bar me-2"></i>Visualizations</h4>
+                        <div class="row">
+                            <!-- Chart selection buttons -->
+                            <div class="col-md-12 mb-3">
+                                <div class="btn-group" role="group" aria-label="Chart type selection">
+                                    <button type="button" class="btn btn-outline-primary chart-type-btn active" data-type="bar">
+                                        <i class="fas fa-chart-bar"></i> Bar Chart
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary chart-type-btn" data-type="line">
+                                        <i class="fas fa-chart-line"></i> Line Chart
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary chart-type-btn" data-type="pie">
+                                        <i class="fas fa-chart-pie"></i> Pie Chart
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- Chart container -->
+                            <div class="col-md-12">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <canvas id="dataChart" height="400"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Query executed successfully but returned no results.
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="card-footer text-muted small">
+                <div class="d-flex justify-content-end align-items-center">
+                    <div class="me-3">Model: Llama3</div>
+                    <div class="badge bg-dark">
+                        <i class="fas fa-code me-1"></i>By Code Crusaders
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Copy to clipboard functionality
+        document.querySelectorAll('.copy-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const target = document.querySelector(btn.dataset.target);
+                navigator.clipboard.writeText(target.textContent.trim());
+                btn.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="far fa-copy me-1"></i>Copy';
+                }, 2000);
+            });
+        });
+
+        // Voice input functionality
+        let recognizing = false;
+        let recognition;
+        const voiceBtn = document.getElementById('voice-btn');
+        const statusSpan = document.getElementById('voice-status');
+        const questionInput = document.getElementById('question-input');
+        
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = function() {
+                recognizing = true;
+                voiceBtn.classList.add('btn-warning');
+                statusSpan.classList.remove('d-none');
+            };
+            recognition.onend = function() {
+                recognizing = false;
+                voiceBtn.classList.remove('btn-warning');
+                statusSpan.classList.add('d-none');
+            };
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                questionInput.value = transcript;
+                // Auto-submit if you wish: document.querySelector('form').submit();
+            };
+
+            voiceBtn.onclick = function() {
+                if (recognizing) {
+                    recognition.stop();
+                } else {
+                    recognition.start();
+                }
+            };
+        } else {
+            voiceBtn.onclick = function() {
+                alert("Sorry, voice recognition not supported in this browser.");
+            }
+        }
+
+        // Chart rendering logic
+        {% if result and result.chart_data %}
+        const chartData = {{ result.chart_data | tojson | safe }};
+        let dataChart = null;
+
+        function renderChart(type) {
+            const ctx = document.getElementById('dataChart').getContext('2d');
+            if (dataChart) {
+                dataChart.destroy();
+            }
+            if (!chartData || !chartData.labels || !chartData.datasets) {
+                ctx.fillStyle = '#f8f9fa';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('No chart data available for this query', ctx.canvas.width / 2, ctx.canvas.height / 2);
+                return;
+            }
+            let datasets = [];
+            if (type === 'pie' && chartData.datasets.length > 0) {
+                datasets = [{
+                    label: chartData.datasets[0].label,
+                    data: chartData.datasets[0].data,
+                    backgroundColor: chartData.datasets[0].backgroundColor,
+                    borderWidth: 1
+                }];
+            } else {
+                datasets = chartData.datasets.map(dataset => {
+                    return {
+                        label: dataset.label,
+                        data: dataset.data,
+                        backgroundColor: type === 'line' ? 'rgba(54, 162, 235, 0.2)' : dataset.backgroundColor,
+                        borderColor: type === 'line' ? 'rgba(54, 162, 235, 1)' : dataset.backgroundColor,
+                        borderWidth: 1,
+                        fill: type === 'line'
+                    };
+                });
+            }
+            dataChart = new Chart(ctx, {
+                type: type,
+                data: {
+                    labels: chartData.labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Query Results Visualization',
+                            font: {
+                                size: 16
+                            }
+                        },
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    scales: type !== 'pie' ? {
+                        y: {
+                            beginAtZero: true
+                        }
+                    } : undefined
+                }
+            });
+        }
+
+        document.querySelectorAll('.chart-type-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.chart-type-btn').forEach(b => {
+                    b.classList.remove('active');
+                });
+                this.classList.add('active');
+                renderChart(this.dataset.type);
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            renderChart('bar');
+        });
+        {% endif %}
     </script>
 </body>
 </html>
